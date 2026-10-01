@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>0924产品目录 | 电子画册</title>
+  
+  <!-- 社交媒体传播元标签 (Open Graph / Twitter Card) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="0924产品目录 - 在线高清画册">
+  <meta property="og:description" content="双指缩放，仿真翻页 / 小说平推双模式，轻触即看精美目录。">
+  <meta property="og:image" content="images/page_01.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="0924产品目录 - 在线高清画册">
+  <meta name="twitter:description" content="双指缩放，仿真翻页 / 小说平推双模式，轻触即看精美目录。">
+  <meta name="twitter:image" content="images/page_01.webp">
+  
+  <!-- 移动端全屏与状态栏定制 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0e12">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="mode-book">
+
+  <!-- 主视觉舞台容器 -->
+  <div class="viewport-wrapper" id="viewport">
+    
+    <!-- 顶部极简品牌与模式控制条 -->
+    <header class="top-nav" id="topNav">
+      <div class="brand-title">0924 PRODUCT CATALOG</div>
+      
+      <div class="top-actions">
+        <!-- 核心模式切换按键 -->
+        <button class="mode-switch-btn" id="btnToggleMode" title="切换翻阅视觉效果">
+          <span class="mode-icon" id="modeIcon">
+            <!-- 默认在书本模式，提示可切换为整页小说 -->
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+          </span>
+          <span class="mode-text" id="modeText">切换为小说平推</span>
+        </button>
+
+        <button class="icon-btn" id="btnFullscreen" title="全屏浏览">
+          <svg class="icon" viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 舞台展示区：双渲染容器 -->
+    <main class="book-stage" id="bookStage">
+      
+      <!-- 容器 1: 3D 仿真书本视图 -->
+      <div id="flipbookWrapper" class="flipbook-wrapper is-closed">
+        <div id="flipbook" class="flip-book">
+          <!-- 12 页内容 -->
+          <div class="page page-cover" data-density="hard">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_01.webp" alt="Page 1" loading="eager" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">01 · 封面</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_02.webp" alt="Page 2" loading="eager" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">02</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_03.webp" alt="Page 3" loading="eager" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">03</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_04.webp" alt="Page 4" loading="eager" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">04</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_05.webp" alt="Page 5" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">05</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_06.webp" alt="Page 6" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">06</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_07.webp" alt="Page 7" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">07</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_08.webp" alt="Page 8" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">08</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_09.webp" alt="Page 9" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">09</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_10.webp" alt="Page 10" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">10</span></div>
+            </div>
+          </div>
+
+          <div class="page" data-density="soft">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_11.webp" alt="Page 11" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">11</span></div>
+            </div>
+          </div>
+
+          <div class="page page-back" data-density="hard">
+            <div class="page-content">
+              <div class="img-wrapper"><img src="images/page_12.webp" alt="Page 12" loading="lazy" draggable="false"></div>
+              <div class="page-footer"><span class="page-label">12 · 封底</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 容器 2: 小说式平面整页滑推视图 (Novel Reader Slide View) -->
+      <div id="slideWrapper" class="slide-wrapper">
+        <div id="slideTrack" class="slide-track">
+          <!-- 12 个滑动整页 -->
+          <div class="slide-card active" data-index="0"><div class="slide-img-box"><img src="images/page_01.webp" alt="Page 1" draggable="false"></div></div>
+          <div class="slide-card" data-index="1"><div class="slide-img-box"><img src="images/page_02.webp" alt="Page 2" draggable="false"></div></div>
+          <div class="slide-card" data-index="2"><div class="slide-img-box"><img src="images/page_03.webp" alt="Page 3" draggable="false"></div></div>
+          <div class="slide-card" data-index="3"><div class="slide-img-box"><img src="images/page_04.webp" alt="Page 4" draggable="false"></div></div>
+          <div class="slide-card" data-index="4"><div class="slide-img-box"><img src="images/page_05.webp" alt="Page 5" draggable="false"></div></div>
+          <div class="slide-card" data-index="5"><div class="slide-img-box"><img src="images/page_06.webp" alt="Page 6" draggable="false"></div></div>
+          <div class="slide-card" data-index="6"><div class="slide-img-box"><img src="images/page_07.webp" alt="Page 7" draggable="false"></div></div>
+          <div class="slide-card" data-index="7"><div class="slide-img-box"><img src="images/page_08.webp" alt="Page 8" draggable="false"></div></div>
+          <div class="slide-card" data-index="8"><div class="slide-img-box"><img src="images/page_09.webp" alt="Page 9" draggable="false"></div></div>
+          <div class="slide-card" data-index="9"><div class="slide-img-box"><img src="images/page_10.webp" alt="Page 10" draggable="false"></div></div>
+          <div class="slide-card" data-index="10"><div class="slide-img-box"><img src="images/page_11.webp" alt="Page 11" draggable="false"></div></div>
+          <div class="slide-card" data-index="11"><div class="slide-img-box"><img src="images/page_12.webp" alt="Page 12" draggable="false"></div></div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- 左右无形触控热区（移动端点击左右侧翻页） -->
+    <div class="edge-hotspot left-hotspot" id="leftHotspot" title="上一页"></div>
+    <div class="edge-hotspot right-hotspot" id="rightHotspot" title="下一页"></div>
+
+    <!-- 底部极简磨砂悬浮控制胶囊 -->
+    <nav class="floating-controls" id="floatingControls">
+      <button class="nav-btn prev-btn" id="btnPrev" aria-label="上一页">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor" d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/>
+        </svg>
+      </button>
+
+      <div class="page-indicator">
+        <span id="currentPage">01</span>
+        <span class="divider">/</span>
+        <span id="totalPage">12</span>
+      </div>
+
+      <button class="nav-btn next-btn" id="btnNext" aria-label="下一页">
+        <svg viewBox="0 0 24 24" width="18" height="18">
+          <path fill="currentColor" d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+        </svg>
+      </button>
+    </nav>
+
+    <!-- 初始引导小贴士 -->
+    <div class="gesture-hint" id="gestureHint">
+      <span>轻扫或点击两侧翻页 · 支持模式切换</span>
+    </div>
+
+  </div>
+
+  <!-- 引入离线仿真翻页核心库 -->
+  <script src="js/page-flip.browser.js"></script>
+  <!-- 业务驱动脚本 -->
+  <script src="js/app.js"></script>
+</body>
+</html>
