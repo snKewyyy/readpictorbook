@@ -200,19 +200,36 @@
   // ============================================================
   // 3. 小说式平面整页滑推引擎 (Novel Slider)
   // ============================================================
-  function updateSlideView(index) {
+  function updateSlideView(index, animate = true) {
     slideCards.forEach((card, idx) => {
-      card.classList.remove('active', 'prev');
+      card.style.transform = '';
+      card.style.opacity = '';
+      card.classList.remove('no-transition');
+
+      if (!animate) {
+        card.classList.add('no-transition');
+      }
+
+      card.classList.remove('active', 'prev', 'next');
       if (idx === index) {
         card.classList.add('active');
       } else if (idx < index) {
         card.classList.add('prev');
+      } else {
+        card.classList.add('next');
       }
     });
+
+    if (!animate) {
+      // 强制重绘后恢复 transition
+      requestAnimationFrame(() => {
+        slideCards.forEach(c => c.classList.remove('no-transition'));
+      });
+    }
   }
 
   // ============================================================
-  // 4. 全局手势交互引擎 (涵盖 仿真书本 + 小说平推 双模式)
+  // 4. 超顺滑手指实时跟手与弹性吸附手势引擎
   // ============================================================
   function setupUnifiedGestures() {
     const stage = document.getElementById('bookStage');
@@ -221,10 +238,20 @@
     let startX = 0;
     let startY = 0;
     let startTime = 0;
+    let currentX = 0;
     let isTracking = false;
+    let isSwiping = false;
+
+    // 获取当前活动卡片及邻近卡片
+    function getActiveCards() {
+      const curIdx = STATE.currentPage;
+      const curCard = slideCards[curIdx];
+      const nextCard = curIdx < STATE.totalPages - 1 ? slideCards[curIdx + 1] : null;
+      const prevCard = curIdx > 0 ? slideCards[curIdx - 1] : null;
+      return { curCard, nextCard, prevCard };
+    }
 
     const onTouchStart = (e) => {
-      // 忽略多指缩放与点击交互按钮
       if (e.touches.length !== 1) {
         isTracking = false;
         return;
@@ -232,51 +259,132 @@
       const touch = e.touches[0];
       startX = touch.clientX;
       startY = touch.clientY;
-      startTime = Date.now();
+      currentX = startX;
+      startTime = performance.now();
       isTracking = true;
+      isSwiping = false;
+
+      // 如果在小说平推模式下，移除 transition，开启零延迟跟手
+      if (STATE.mode === 'slide') {
+        const { curCard, nextCard, prevCard } = getActiveCards();
+        if (curCard) curCard.classList.add('no-transition');
+        if (nextCard) nextCard.classList.add('no-transition');
+        if (prevCard) prevCard.classList.add('no-transition');
+      }
+    };
+
+    const onTouchMove = (e) => {
+      if (!isTracking) return;
+      if (e.touches.length !== 1) return;
+
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      // 水平方向判定：当横向位移大于纵向位移时接管为滑动
+      if (!isSwiping) {
+        if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
+          isSwiping = true;
+        } else if (Math.abs(deltaY) > 12) {
+          // 纵向滚动优先，释放手势
+          isTracking = false;
+          return;
+        }
+      }
+
+      if (isSwiping && STATE.mode === 'slide') {
+        currentX = touch.clientX;
+        const screenW = window.innerWidth;
+        const { curCard, nextCard, prevCard } = getActiveCards();
+
+        // 边界弹性阻尼：第 1 页向右拉或最后一页向左拉施加 0.33 阻尼
+        let effectiveDelta = deltaX;
+        if ((STATE.currentPage === 0 && deltaX > 0) ||
+            (STATE.currentPage === STATE.totalPages - 1 && deltaX < 0)) {
+          effectiveDelta = deltaX * 0.32;
+        }
+
+        // 当前页实时跟手
+        if (curCard) {
+          curCard.style.transform = `translate3d(${effectiveDelta}px, 0, 0)`;
+          // 伴随平滑透明度衰减
+          const opacityFactor = 1 - Math.min(Math.abs(effectiveDelta) / (screenW * 1.5), 0.4);
+          curCard.style.opacity = `${opacityFactor}`;
+        }
+
+        // 目标邻近卡片自适应透出跟随
+        if (effectiveDelta < 0 && nextCard) {
+          // 手指向左拉，下一页从右边跟进来
+          const nextOffset = screenW + effectiveDelta;
+          nextCard.style.transform = `translate3d(${nextOffset}px, 0, 0)`;
+          nextCard.style.opacity = '1';
+          nextCard.style.zIndex = '9';
+        } else if (effectiveDelta > 0 && prevCard) {
+          // 手指向右拉，上一页从左边跟进来
+          const prevOffset = -screenW + effectiveDelta;
+          prevCard.style.transform = `translate3d(${prevOffset}px, 0, 0)`;
+          prevCard.style.opacity = '1';
+          prevCard.style.zIndex = '9';
+        }
+      }
     };
 
     const onTouchEnd = (e) => {
       if (!isTracking) return;
       isTracking = false;
 
-      if (!e.changedTouches || e.changedTouches.length === 0) return;
-      const touch = e.changedTouches[0];
-      const deltaX = touch.clientX - startX;
-      const deltaY = touch.clientY - startY;
-      const deltaTime = Date.now() - startTime;
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
+      const touch = e.changedTouches && e.changedTouches[0];
+      const deltaX = (touch ? touch.clientX : currentX) - startX;
+      const deltaTime = performance.now() - startTime;
+      const absDeltaX = Math.abs(deltaX);
+      const screenW = window.innerWidth;
+      const velocity = absDeltaX / Math.max(deltaTime, 1); // 像素/毫秒
 
-      // 1. 判断是否为水平滑动手势 (Swipe: 水平滑动 > 35px 且倾角合理)
-      if (absX > 35 && absY < absX * 1.5 && deltaTime < 800) {
-        if (deltaX < 0) {
-          // 向左划 ➔ 下一页
+      // 1. 如果在小说平推模式下，执行物理吸附/回弹
+      if (STATE.mode === 'slide') {
+        slideCards.forEach(c => c.classList.remove('no-transition'));
+
+        // 判定阈值：位移超过屏幕 20% 或 快速甩动(抛掷 Flick: 速度 > 0.4px/ms 且位移 > 25px)
+        const isFlick = velocity > 0.38 && absDeltaX > 25;
+        const isPastHalf = absDeltaX > screenW * 0.20;
+
+        if (deltaX < 0 && (isFlick || isPastHalf) && STATE.currentPage < STATE.totalPages - 1) {
+          // 翻下一页
           goToNextPage();
-        } else {
-          // 向右划 ➔ 上一页
+        } else if (deltaX > 0 && (isFlick || isPastHalf) && STATE.currentPage > 0) {
+          // 翻上一页
           goToPrevPage();
+        } else if (isSwiping) {
+          // 未达到翻页阈值：平滑弹性吸附回弹本页
+          updateSlideView(STATE.currentPage, true);
+        } else if (!isSwiping && absDeltaX < 12 && deltaTime < 350) {
+          // 点击屏幕左/右侧翻页 (Tap)
+          const clickX = touch ? touch.clientX : startX;
+          if (clickX > screenW * 0.45) {
+            goToNextPage();
+          } else {
+            goToPrevPage();
+          }
         }
+        isSwiping = false;
         return;
       }
 
-      // 2. 判断是否为快速轻点屏幕 (Tap: 移动 < 12px 且时间 < 300ms)
-      if (absX < 12 && absY < 12 && deltaTime < 350) {
-        const screenW = window.innerWidth;
-        const clickX = touch.clientX;
-
-        // 点击屏幕右侧 55% ➔ 下一页
-        if (clickX > screenW * 0.45) {
-          goToNextPage();
-        } else {
-          // 点击屏幕左侧 45% ➔ 上一页
-          goToPrevPage();
-        }
+      // 2. 如果在 3D 书本模式下
+      if (absDeltaX > 35 && deltaTime < 800) {
+        if (deltaX < 0) goToNextPage();
+        else goToPrevPage();
+      } else if (absDeltaX < 12 && deltaTime < 350) {
+        const clickX = touch ? touch.clientX : startX;
+        if (clickX > screenW * 0.45) goToNextPage();
+        else goToPrevPage();
       }
     };
 
     stage.addEventListener('touchstart', onTouchStart, { passive: true });
+    stage.addEventListener('touchmove', onTouchMove, { passive: true });
     stage.addEventListener('touchend', onTouchEnd, { passive: true });
+    stage.addEventListener('touchcancel', onTouchEnd, { passive: true });
   }
 
   // ============================================================
