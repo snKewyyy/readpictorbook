@@ -308,8 +308,11 @@ html, body {
 }
 
 .slide-img-box {
-  max-width: 94vw;
-  max-height: 84vh;
+  width: 94vw;
+  max-width: 900px;
+  height: auto;
+  max-height: 80vh;
+  aspect-ratio: 1920 / 1290;
   box-shadow: 0 15px 45px rgba(0, 0, 0, 0.55);
   border-radius: 4px;
   overflow: hidden;
@@ -317,11 +320,14 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .slide-img-box img {
+  width: 100%;
+  height: 100%;
   max-width: 100%;
-  max-height: 84vh;
+  max-height: 80vh;
   object-fit: contain;
   display: block;
   user-select: none;
@@ -512,8 +518,15 @@ body.mode-slide #slideWrapper {
   100% { opacity: 0; transform: translateY(-4px); }
 }
 
-/* 移动端竖屏优化适配 */
+/* 移动端与微信 WebView 性能降级适配：关闭昂贵实时背景高斯模糊，使用纯色半透明 */
 @media (max-width: 768px) {
+  :root {
+    --surface-color: rgba(18, 20, 26, 0.95);
+  }
+  .mode-switch-btn, .icon-btn, .floating-controls, .action-feedback-pill {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
   .top-nav {
     padding: 0 16px;
     height: 50px;

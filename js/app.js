@@ -42,6 +42,19 @@
   let feedbackTimer = null;
 
   // ============================================================
+  // 0. 高性能图片预加载管理器 (彻底消灭翻页黑屏)
+  // ============================================================
+  const imageCache = [];
+  function preloadAllImages() {
+    for (let i = 1; i <= STATE.totalPages; i++) {
+      const img = new Image();
+      const numStr = String(i).padStart(2, '0');
+      img.src = `images/page_${numStr}.webp`;
+      imageCache.push(img);
+    }
+  }
+
+  // ============================================================
   // 1. 触控与操作反馈系统 (视觉微光 + 震动 + 提示胶囊)
   // ============================================================
   function triggerActionFeedback(direction, pageNum) {
@@ -456,7 +469,27 @@
 
   // 页面加载完成初始化
   window.addEventListener('DOMContentLoaded', () => {
-    initBookFlip();
+    preloadAllImages();
+
+    // 如果是手机端竖屏或微信内置浏览器，默认进入极简流畅小说平推模式
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      STATE.mode = 'slide';
+      document.body.classList.remove('mode-book');
+      document.body.classList.add('mode-slide');
+      if (modeText) modeText.textContent = '切换为仿真书本';
+      if (modeIcon) {
+        modeIcon.innerHTML = `
+          <svg viewBox="0 0 24 24" width="16" height="16">
+            <path fill="currentColor" d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/>
+          </svg>
+        `;
+      }
+      updateSlideView(0);
+    } else {
+      initBookFlip();
+    }
+
     setupEventListeners();
     showControlsTemporarily();
   });
