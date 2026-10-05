@@ -343,19 +343,72 @@ body.mode-slide #slideWrapper {
   display: flex;
 }
 
-/* ============================================================
-   手势热区与底部悬浮控制胶囊
-============================================================ */
+/* 左右无形触控热区（移动端点击左右侧翻页） */
 .edge-hotspot {
   position: absolute;
-  top: 60px;
-  bottom: 80px;
-  width: 14%;
-  z-index: 40;
+  top: 55px;
+  bottom: 75px;
+  width: 25%;
+  z-index: 50;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 .left-hotspot { left: 0; }
 .right-hotspot { right: 0; }
+
+/* 翻页触控边缘微光反馈动效 */
+.touch-feedback-glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 140px;
+  pointer-events: none;
+  z-index: 95;
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+}
+
+.touch-feedback-glow.glow-left {
+  left: 0;
+  background: radial-gradient(ellipse at 0% 50%, rgba(59, 130, 246, 0.45) 0%, rgba(59, 130, 246, 0.15) 45%, transparent 75%);
+}
+
+.touch-feedback-glow.glow-right {
+  right: 0;
+  background: radial-gradient(ellipse at 100% 50%, rgba(59, 130, 246, 0.45) 0%, rgba(59, 130, 246, 0.15) 45%, transparent 75%);
+}
+
+.touch-feedback-glow.active {
+  opacity: 1;
+  transition: opacity 0.08s ease-in;
+}
+
+/* 翻页脉冲与触控反馈标签 */
+.action-feedback-pill {
+  position: absolute;
+  top: 72px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 96;
+  opacity: 0;
+  transform: translateY(-5px) scale(0.95);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.action-feedback-pill.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
 
 .floating-controls {
   position: absolute;
@@ -379,6 +432,17 @@ body.mode-slide #slideWrapper {
   opacity: 0;
   transform: translateY(15px);
   pointer-events: none;
+}
+
+/* 页码跳动反馈动画 */
+.page-indicator.bump {
+  animation: pageIndicatorBump 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pageIndicatorBump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); color: #60a5fa; }
+  100% { transform: scale(1); }
 }
 
 .nav-btn {
@@ -466,11 +530,22 @@ body.mode-slide #slideWrapper {
     height: 32px;
   }
   .edge-hotspot {
-    width: 20%;
+    width: 28%;
+    top: 50px;
+    bottom: 70px;
   }
+  /* 移动端底部控制胶囊常驻可见，避免失去操控感 */
   .floating-controls {
-    bottom: 18px;
-    padding: 6px 14px;
-    gap: 12px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    padding: 7px 16px;
+    gap: 14px;
+    opacity: 0.95 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+  }
+  .floating-controls.hidden {
+    opacity: 0.8 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
   }
 }
