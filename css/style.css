@@ -293,9 +293,6 @@ html, body {
   transform: translate3d(100%, 0, 0);
   transition: transform 0.36s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
 
 /* 实时触摸拖动时禁用 transition，达到零延迟紧随手指 */
@@ -304,9 +301,9 @@ html, body {
 }
 
 .slide-card.active {
-  opacity: 1;
+  opacity: 1 !important;
   pointer-events: auto;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) !important;
   z-index: 10;
 }
 
@@ -327,9 +324,9 @@ html, body {
 .slide-img-box {
   width: 94vw;
   max-width: 900px;
-  height: auto;
+  height: calc(94vw / 1.488);
+  min-height: 220px;
   max-height: 80vh;
-  aspect-ratio: 1920 / 1290;
   box-shadow: 0 15px 45px rgba(0, 0, 0, 0.55);
   border-radius: 4px;
   overflow: hidden;

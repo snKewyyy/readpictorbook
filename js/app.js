@@ -633,7 +633,11 @@
           </svg>
         `;
       }
-      updateSlideView(0);
+      updateSlideView(0, false);
+      // 延迟确保 WebKit 与微信 WebView 完成布局排版后二次唤醒首屏渲染
+      requestAnimationFrame(() => {
+        updateSlideView(0, false);
+      });
     } else {
       initBookFlip();
     }
