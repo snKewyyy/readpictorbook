@@ -532,7 +532,7 @@
   }
 
   // ============================================================
-  // 7. 控制栏沉浸式自动隐藏与全屏
+  // 7. 控制栏沉浸式自动隐藏与双轨全屏管理器 (原生全屏 + CSS沉浸全屏)
   // ============================================================
   function showControlsTemporarily() {
     floatingControls.classList.remove('hidden');
@@ -545,17 +545,122 @@
     }, 4000);
   }
 
+  // 状态与 UI 同步
+  let isWebFullscreen = false;
+
+  function isNativeFullscreen() {
+    const doc = window.document;
+    return !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement || doc.msFullscreenElement);
+  }
+
+  function isCurrentFullscreen() {
+    return isNativeFullscreen() || isWebFullscreen;
+  }
+
+  function updateFullscreenUI(active) {
+    if (active) {
+      document.body.classList.add('is-fullscreen');
+      if (btnFullscreen) {
+        btnFullscreen.classList.add('btn-fullscreen-active');
+        btnFullscreen.setAttribute('title', '退出全屏');
+        btnFullscreen.setAttribute('aria-label', '退出全屏');
+      }
+    } else {
+      document.body.classList.remove('is-fullscreen');
+      if (btnFullscreen) {
+        btnFullscreen.classList.remove('btn-fullscreen-active');
+        btnFullscreen.setAttribute('title', '全屏浏览');
+        btnFullscreen.setAttribute('aria-label', '全屏浏览');
+      }
+    }
+  }
+
+  function showActionToast(text) {
+    if (actionFeedbackPill) {
+      actionFeedbackPill.textContent = text;
+      actionFeedbackPill.classList.add('show');
+      clearTimeout(feedbackTimer);
+      feedbackTimer = setTimeout(() => {
+        actionFeedbackPill.classList.remove('show');
+      }, 1000);
+    }
+  }
+
   function toggleFullscreen() {
     const doc = window.document;
     const docEl = doc.documentElement;
-    const requestFs = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
-    const cancelFs = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+    const requestFs = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.webkitRequestFullScreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
+    const cancelFs = doc.exitFullscreen || doc.webkitExitFullscreen || doc.webkitCancelFullScreen || doc.mozCancelFullScreen || doc.msExitFullscreen;
 
-    if (!doc.fullscreenElement && !doc.webkitFullscreenElement) {
-      if (requestFs) requestFs.call(docEl);
-    } else {
-      if (cancelFs) cancelFs.call(doc);
+    // 轻微震动反馈
+    try {
+      if (window.navigator && window.navigator.vibrate) {
+        window.navigator.vibrate(20);
+      }
+    } catch (e) {}
+
+    // 当前处于全屏态（原生或CSS网页全屏）：统一退出
+    if (isCurrentFullscreen()) {
+      if (isNativeFullscreen() && cancelFs) {
+        try {
+          const p = cancelFs.call(doc);
+          if (p && p.catch) p.catch(() => {});
+        } catch (e) {}
+      }
+      isWebFullscreen = false;
+      updateFullscreenUI(false);
+      showActionToast('已退出全屏');
+      
+      // 触发页面视口尺寸重绘自适应
+      setTimeout(() => {
+        if (STATE.mode === 'book' && pageFlip) {
+          initBookFlip();
+          pageFlip.turnToPage(STATE.currentPage);
+        }
+      }, 150);
+      return;
     }
+
+    // 当前未全屏：尝试原生全屏；若不支持或受限（iOS Safari / 微信 WebView），优雅降级为网页沉浸全屏
+    if (requestFs) {
+      try {
+        const p = requestFs.call(docEl);
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            updateFullscreenUI(true);
+            showActionToast('已进入全屏模式');
+          }).catch(() => {
+            // 原生全屏被宿主环境（如微信 WebView）拦截或权限拒绝，无缝降级为沉浸网页全屏
+            isWebFullscreen = true;
+            updateFullscreenUI(true);
+            showActionToast('已进入沉浸全屏');
+          });
+        } else {
+          // 旧版同步返回或无 Promise 的 WebKit
+          isWebFullscreen = true;
+          updateFullscreenUI(true);
+          showActionToast('已进入沉浸全屏');
+        }
+      } catch (err) {
+        // 抛出异常（如 iOS Safari 对常规 DOM 抛异常），降级为沉浸网页全屏
+        isWebFullscreen = true;
+        updateFullscreenUI(true);
+        showActionToast('已进入沉浸全屏');
+      }
+    } else {
+      // 完全无原生 requestFullscreen 接口（如 iOS 设备），直接启用沉浸式全屏
+      isWebFullscreen = true;
+      updateFullscreenUI(true);
+      showActionToast('已进入沉浸全屏');
+    }
+
+    // 重新校准书本舞台比例
+    setTimeout(() => {
+      if (STATE.mode === 'book' && pageFlip) {
+        initBookFlip();
+        pageFlip.turnToPage(STATE.currentPage);
+      }
+    }, 150);
   }
 
   // ============================================================
@@ -613,6 +718,20 @@
 
     // 启动统一手势引擎
     setupUnifiedGestures();
+
+    // 监听系统全屏变化事件（物理返回键、ESC键或系统手势触发退出时同步UI状态）
+    const onFsChange = () => {
+      const nativeActive = isNativeFullscreen();
+      if (!nativeActive && !isWebFullscreen) {
+        updateFullscreenUI(false);
+      } else if (nativeActive) {
+        updateFullscreenUI(true);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    document.addEventListener('mozfullscreenchange', onFsChange);
+    document.addEventListener('MSFullscreenChange', onFsChange);
   }
 
   // 页面加载完成初始化
